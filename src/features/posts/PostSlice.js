@@ -18,8 +18,8 @@ export const savePost = createAsyncThunk(
   "posts/savePost",
   async (postContent) => {
     const token = localStorage.getItem("authToken");
-    const decodedToken = jwtDecode(token);
-    const userId = decodedToken.id;
+    const decode = jwtDecode(token);
+    const userId = decode.id;
     const data = {
       title: "Post Title",
       content: postContent,
