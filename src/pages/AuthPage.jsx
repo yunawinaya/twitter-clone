@@ -16,6 +16,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [authToken, setAuthToken] = useLocalStorage("authToken", "");
   const [errorMessage, setErrorMessage] = useState("");
+
   const handleClose = () => {
     setModalShow(null);
     setErrorMessage("");
