@@ -1,20 +1,32 @@
-import { useEffect, useState } from "react";
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  getAuth,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
+import { useContext, useEffect, useState } from "react";
 import { Button, Col, Form, Image, Modal, Row } from "react-bootstrap";
-import axios from "axios";
-import useLocalStorage from "use-local-storage";
+import { AuthContext } from "../components/AuthProvider";
 import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
   const loginImage = "https://sig1.co/img-twitter-1";
-  const url =
-    "https://auth-back-end-yunawinaya.sigma-school-full-stack.repl.co";
 
   const [modalShow, setModalShow] = useState(null);
   const handleShowSignUp = () => setModalShow("SignUp");
   const handleShowLogin = () => setModalShow("Login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [authToken, setAuthToken] = useLocalStorage("authToken", "");
+  const auth = getAuth();
+  const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
+  const provider = new GoogleAuthProvider();
+
+  useEffect(() => {
+    if (currentUser) navigate("/profile");
+  }, [currentUser, navigate]);
+
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleClose = () => {
@@ -22,22 +34,15 @@ export default function AuthPage() {
     setErrorMessage("");
   };
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (authToken) {
-      navigate("/profile");
-    }
-  }, [authToken, navigate]);
-
   const handleSignUp = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${url}/signup`, {
+      const res = await createUserWithEmailAndPassword(
+        auth,
         username,
-        password,
-      });
-      console.log(res.data);
+        password
+      );
+      console.log(res.user);
     } catch (error) {
       if (error.response) {
         setErrorMessage(error.response.data.message);
@@ -50,14 +55,20 @@ export default function AuthPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${url}/login`, {
-        username,
-        password,
-      });
-      if (res.data && res.data.auth === true && res.data.token) {
-        setAuthToken(res.data.token);
-        console.log("Login was successful, token saved");
+      await signInWithEmailAndPassword(auth, username, password);
+    } catch (error) {
+      if (error.response) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage("An error occurred. Please try again later.");
       }
+    }
+  };
+
+  const handleGoogleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithPopup(auth, provider);
     } catch (error) {
       if (error.response) {
         setErrorMessage(error.response.data.message);
@@ -85,7 +96,11 @@ export default function AuthPage() {
           Join Twitter today.
         </h2>
         <Col sm={5} className="d-grid gap-2">
-          <Button className="rounded-pill" variant="outline-dark">
+          <Button
+            className="rounded-pill"
+            variant="outline-dark"
+            onClick={handleGoogleLogin}
+          >
             <i className="bi bi-google"></i> Sign up with Google
           </Button>
           <Button className="rounded-pill" variant="outline-dark">
