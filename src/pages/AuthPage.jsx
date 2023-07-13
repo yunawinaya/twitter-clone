@@ -1,9 +1,11 @@
 import {
+  FacebookAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   getAuth,
   signInWithEmailAndPassword,
   signInWithPopup,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { useContext, useEffect, useState } from "react";
 import { Button, Col, Form, Image, Modal, Row } from "react-bootstrap";
@@ -21,7 +23,6 @@ export default function AuthPage() {
   const auth = getAuth();
   const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
-  const provider = new GoogleAuthProvider();
 
   useEffect(() => {
     if (currentUser) navigate("/profile");
@@ -67,6 +68,7 @@ export default function AuthPage() {
 
   const handleGoogleLogin = async (e) => {
     e.preventDefault();
+    const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
     } catch (error) {
@@ -74,6 +76,33 @@ export default function AuthPage() {
         setErrorMessage(error.response.data.message);
       } else {
         setErrorMessage("An error occurred. Please try again later.");
+      }
+    }
+  };
+
+  const handleFacebookLogin = async (e) => {
+    e.preventDefault();
+    const provider = new FacebookAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      if (error.response) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage("An error occurred. Please try again later.");
+      }
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    try {
+      await sendPasswordResetEmail(auth, username);
+    } catch (error) {
+      if (error.response) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage("Please input your email");
       }
     }
   };
@@ -102,6 +131,13 @@ export default function AuthPage() {
             onClick={handleGoogleLogin}
           >
             <i className="bi bi-google"></i> Sign up with Google
+          </Button>
+          <Button
+            className="rounded-pill"
+            variant="outline-dark"
+            onClick={handleFacebookLogin}
+          >
+            <i className="bi bi-facebook"></i> Sign up with Facebook
           </Button>
           <Button className="rounded-pill" variant="outline-dark">
             <i className="bi bi-apple"></i> Sign up with Apple
@@ -154,19 +190,29 @@ export default function AuthPage() {
                   placeholder="Enter username"
                 />
               </Form.Group>
-              <Form.Group className="mb-3" controlId="formBasicPassword">
+              <Form.Group className="mb-1" controlId="formBasicPassword">
                 <Form.Control
                   onChange={(e) => setPassword(e.target.value)}
                   type="password"
                   placeholder="Password"
                 />
               </Form.Group>
+              {modalShow === "Login" && (
+                <Button
+                  className="rounded-pill mb-3 text-auto"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleForgotPassword}
+                >
+                  Forgot password
+                </Button>
+              )}
               <p style={{ fontSize: "12px" }}>
                 By signing up, you agree to the Terms of Service and Privacy
                 Policy, including Cookie Use. SigmaTweets may use your contact
                 information, including your email address and phone number for
                 purposes outlined in our Privacy Policy, like keeping your
-                account secure and personalising our services, including ads.
+                account secure and personalizing our services, including ads.
                 Learn more. Others will be able to find you by email or phone
                 number, when provided, unless you choose otherwise here.
               </p>
