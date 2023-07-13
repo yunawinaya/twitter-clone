@@ -1,10 +1,13 @@
-import { useContext, useState } from "react";
-import { Button, Col, Image, Row } from "react-bootstrap";
+import { useContext, useState, useEffect } from "react";
+import { Button, Col, Form, Image, Row } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import {
   deletePost,
   likePost,
   removeLikeFromPost,
+  fetchCommentsByPost,
+  saveComment,
+  deleteComment,
 } from "../features/posts/PostSlice";
 import { AuthContext } from "./AuthProvider";
 import UpdatePostModal from "./UpdatePostModal";
@@ -12,6 +15,9 @@ import UpdatePostModal from "./UpdatePostModal";
 export default function ProfilePostCard({ post }) {
   const { content, id: postId, imageUrl } = post;
   const [likes, setLikes] = useState(post.likes || []);
+  const [comments, setComments] = useState(post.comments || []);
+  const [showCommentForm, setShowCommentForm] = useState(false);
+  const [commentContent, setCommentContent] = useState("");
   const dispatch = useDispatch();
   const { currentUser } = useContext(AuthContext);
   const userId = currentUser.uid;
@@ -44,6 +50,31 @@ export default function ProfilePostCard({ post }) {
     dispatch(deletePost({ userId, postId }));
   };
 
+  useEffect(() => {
+    dispatch(fetchCommentsByPost({ userId, postId })).then((response) => {
+      setComments(response.payload);
+    });
+  }, [dispatch, postId, userId]);
+
+  const handleSaveComment = () => {
+    // Save the comment and update the state
+    dispatch(saveComment({ userId, postId, commentContent })).then(
+      (response) => {
+        setComments([...comments, response.payload]);
+      }
+    );
+    // Reset the comment form
+    setCommentContent("");
+    // Hide the comment form
+    setShowCommentForm(false);
+  };
+
+  const handleDeleteComment = (commentId) => {
+    dispatch(deleteComment({ userId, postId, commentId })).then(() => {
+      setComments(comments.filter((comment) => comment.id !== commentId));
+    });
+  };
+
   return (
     <Row
       className="p-3"
@@ -59,10 +90,13 @@ export default function ProfilePostCard({ post }) {
         <strong>Yuna Winaya</strong>
         <span> @yunawinaya · Apr 16</span>
         <p>{content}</p>
-        <Image src={imageUrl} style={{ width: 150 }} />
+        <Image className="mb-3" src={imageUrl} style={{ width: 150 }} />
         <div className="d-flex justify-content-between">
           <Button variant="light">
-            <i className="bi bi-chat"></i>
+            <i
+              className="bi bi-chat"
+              onClick={() => setShowCommentForm(true)}
+            ></i>
           </Button>
           <Button variant="light">
             <i className="bi bi-repeat"></i>
@@ -94,6 +128,46 @@ export default function ProfilePostCard({ post }) {
             originalPostContent={content}
           />
         </div>
+        {comments.map((comment) => (
+          <div key={comment.id}>
+            <hr />
+            <Row>
+              <Col sm={1}>
+                <Image src={pic} fluid roundedCircle />
+              </Col>
+              <Col>
+                <strong>Yuna Winaya</strong>
+                <span> @yunawinaya · Apr 16</span>
+                <span className="offset-md-4">
+                  <Button
+                    variant="light"
+                    onClick={() => handleDeleteComment(comment.id)}
+                  >
+                    <i className="bi bi-x-lg"></i>
+                  </Button>
+                </span>
+                <p>{comment.content}</p>
+              </Col>
+            </Row>
+          </div>
+        ))}
+        {/* Comment Form */}
+        {showCommentForm && (
+          <Form className="mt-3">
+            <Form.Group>
+              <Form.Control
+                type="text"
+                className="mb-2"
+                placeholder="Write a comment..."
+                value={commentContent}
+                onChange={(e) => setCommentContent(e.target.value)}
+              />
+            </Form.Group>
+            <Button variant="secondary" size="sm" onClick={handleSaveComment}>
+              Post Comment
+            </Button>
+          </Form>
+        )}
       </Col>
     </Row>
   );

@@ -58,10 +58,16 @@ export default function AuthPage() {
     try {
       await signInWithEmailAndPassword(auth, username, password);
     } catch (error) {
-      if (error.response) {
-        setErrorMessage(error.response.data.message);
-      } else {
-        setErrorMessage("An error occurred. Please try again later.");
+      switch (error.code) {
+        case "auth/wrong-password":
+          setErrorMessage("Invalid email or password.");
+          break;
+        case "auth/user-not-found":
+          setErrorMessage("User not found.");
+          break;
+        default:
+          setErrorMessage("An error occurred. Please try again later.");
+          break;
       }
     }
   };

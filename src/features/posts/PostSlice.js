@@ -161,6 +161,67 @@ export const removeLikeFromPost = createAsyncThunk(
   }
 );
 
+export const fetchCommentsByPost = createAsyncThunk(
+  "posts/fetchCommentsByPost",
+  async ({ userId, postId }) => {
+    try {
+      const commentsRef = collection(
+        db,
+        `users/${userId}/posts/${postId}/comments`
+      );
+      const querySnapshot = await getDocs(commentsRef);
+      const docs = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      return docs;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+);
+
+export const saveComment = createAsyncThunk(
+  "posts/saveComment",
+  async ({ userId, postId, commentContent }) => {
+    try {
+      const commentsRef = collection(
+        db,
+        `users/${userId}/posts/${postId}/comments`
+      );
+      const newCommentRef = doc(commentsRef);
+      await setDoc(newCommentRef, { content: commentContent });
+      const newComment = await getDoc(newCommentRef);
+      const comment = {
+        id: newComment.id,
+        ...newComment.data(),
+      };
+      return comment;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+);
+
+export const deleteComment = createAsyncThunk(
+  "posts/deleteComment",
+  async ({ userId, postId, commentId }) => {
+    try {
+      const commentRef = doc(
+        db,
+        `users/${userId}/posts/${postId}/comments/${commentId}`
+      );
+      await deleteDoc(commentRef);
+      return commentId;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+);
+
 const postsSlice = createSlice({
   name: "posts",
   initialState: { posts: [], loading: true },
@@ -207,6 +268,41 @@ const postsSlice = createSlice({
         const deletedPostId = action.payload;
         // Filter out the deleted post from state
         state.posts = state.posts.filter((post) => post.id !== deletedPostId);
+      })
+      .addCase(fetchCommentsByPost.fulfilled, (state, action) => {
+        const comments = action.payload;
+        // Find the post in the state
+        const postIndex = state.posts.findIndex(
+          (post) => post.id === comments.id
+        );
+        if (postIndex !== -1) {
+          state.posts[postIndex].comments = comments;
+        }
+      })
+      .addCase(saveComment.fulfilled, (state, action) => {
+        const comment = action.payload;
+        // Find the post in the state
+        const postIndex = state.posts.findIndex(
+          (post) => post.id === comment.id
+        );
+        if (postIndex !== -1) {
+          state.posts[postIndex].comments = [
+            comment,
+            ...state.posts[postIndex].comments,
+          ];
+        }
+      })
+      .addCase(deleteComment.fulfilled, (state, action) => {
+        const commentId = action.payload;
+        // Find the post in the state
+        const postIndex = state.posts.findIndex(
+          (post) => post.id === commentId.id
+        );
+        if (postIndex !== -1) {
+          state.posts[postIndex].comments = state.posts[
+            postIndex
+          ].comments.filter((comment) => comment.id !== commentId);
+        }
       });
   },
 });
