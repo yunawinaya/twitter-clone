@@ -7,7 +7,7 @@ import { AuthContext } from "./AuthProvider";
 
 export default function ProfileMidBody() {
   const url =
-    "https://pbs.twimg.com/profile_banners/83072625/1602845571/1500x500";
+    "https://marketplace.canva.com/EAE850WrkBk/1/0/1600w/canva-dark-brown-minimalist-illustration-welcome-to-my-timeline-twitter-header-uZB0o0wl4ZY.jpg";
   const pic =
     "https://media.licdn.com/dms/image/C5603AQG9hvnbZ2IsZw/profile-displayphoto-shrink_800_800/0/1630294362361?e=1694044800&v=beta&t=K1NzEr_OHL4ueDqmj2_MS4tSVx3lOyKNuYzHBKymX1c";
 

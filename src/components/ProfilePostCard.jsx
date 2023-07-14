@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from "react";
-import { Button, Col, Form, Image, Row } from "react-bootstrap";
+import { Button, Col, Form, Image, Modal, Row } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import {
   deletePost,
@@ -18,6 +18,8 @@ export default function ProfilePostCard({ post }) {
   const [comments, setComments] = useState(post.comments || []);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [commentContent, setCommentContent] = useState("");
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // new state variable
   const dispatch = useDispatch();
   const { currentUser } = useContext(AuthContext);
   const userId = currentUser.uid;
@@ -28,10 +30,11 @@ export default function ProfilePostCard({ post }) {
   const pic =
     "https://media.licdn.com/dms/image/C5603AQG9hvnbZ2IsZw/profile-displayphoto-shrink_800_800/0/1630294362361?e=1694044800&v=beta&t=K1NzEr_OHL4ueDqmj2_MS4tSVx3lOyKNuYzHBKymX1c";
 
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-
   const handleShowUpdateModal = () => setShowUpdateModal(true);
   const handleCloseUpdateModal = () => setShowUpdateModal(false);
+
+  const handleShowDeleteModal = () => setShowDeleteModal(true); // new function
+  const handleCloseDeleteModal = () => setShowDeleteModal(false); // new function
 
   const handleLike = () => (isLiked ? removeFromLikes() : addToLikes());
 
@@ -47,6 +50,7 @@ export default function ProfilePostCard({ post }) {
   };
 
   const handleDelete = () => {
+    handleCloseDeleteModal(); // close the delete confirmation modal
     dispatch(deletePost({ userId, postId }));
   };
 
@@ -112,13 +116,10 @@ export default function ProfilePostCard({ post }) {
           <Button variant="light">
             <i className="bi bi-graph-up"></i> 61
           </Button>
-          <Button variant="light">
-            <i
-              className="bi bi-pencil-square"
-              onClick={handleShowUpdateModal}
-            ></i>
+          <Button variant="light" onClick={handleShowUpdateModal}>
+            <i className="bi bi-pencil-square"></i>
           </Button>
-          <Button variant="light" onClick={handleDelete}>
+          <Button variant="light" onClick={handleShowDeleteModal}>
             <i className="bi bi-trash"></i>
           </Button>
           <UpdatePostModal
@@ -169,6 +170,21 @@ export default function ProfilePostCard({ post }) {
           </Form>
         )}
       </Col>
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Tweet</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to delete this tweet?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseDeleteModal}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Row>
   );
 }
